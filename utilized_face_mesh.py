@@ -23,7 +23,7 @@ class Utilized_face_mesh(mp.solutions.face_mesh.FaceMesh):
         self, 
         img,
         target_landmarks:Dict[str, int]
-        ) -> Dict[str, Dict[str, Tuple[np.float32]]]:
+        ) -> Dict[str, Dict[str, Tuple[np.float64]]]:
         # To improve performance, optionally mark the image as not writeable to pass by reference.
         img.flags.writeable = False
 
@@ -34,7 +34,7 @@ class Utilized_face_mesh(mp.solutions.face_mesh.FaceMesh):
             for face_num, face_landmarks in enumerate(parsed_results.multi_face_landmarks):
                 self.__last_landmarks_of_faces[str(face_num)] = face_landmarks
                 
-                coordinates_of_multi_face[str(face_num)]:Dict[str, Tuple[np.float32]] = {}
+                coordinates_of_multi_face[str(face_num)]:Dict[str, Tuple[np.float64]] = {}
                 for landmark_name, landmark_num in target_landmarks.items():
                     x, y, z = self.__get_coordinate_from_landmark(face_landmarks.landmark, landmark_num)
                     coordinates_of_multi_face[str(face_num)][landmark_name] = (x, y, z)
@@ -44,10 +44,10 @@ class Utilized_face_mesh(mp.solutions.face_mesh.FaceMesh):
         return coordinates_of_multi_face
 
 
-    def __parse_bgr_image(self, img):
+    def __parse_bgr_image(self, img:cv2.Mat):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         results = self.process(img)
-
+        
         return results
 
 
@@ -55,10 +55,10 @@ class Utilized_face_mesh(mp.solutions.face_mesh.FaceMesh):
         self,
         landmarks,
         num:int,
-        ) -> Tuple[np.float32]:
-        x = np.float32(landmarks[num].x)     #[0, 1]
-        y = np.float32(landmarks[num].y)     #[0, 1]
-        z = np.float32(landmarks[num].z + 1) #[-1, 1] -> [0, 2]
+        ) -> Tuple[np.float64]:
+        x = np.float64(landmarks[num].x)     #[0, 1]
+        y = np.float64(landmarks[num].y)     #[0, 1]
+        z = np.float64(landmarks[num].z + 1) #[-1, 1] -> [0, 2]
 
         return x, y, z
     
@@ -70,16 +70,19 @@ class Utilized_face_mesh(mp.solutions.face_mesh.FaceMesh):
                 landmark_list=face_landmarks,
                 connections=mp.solutions.face_mesh.FACEMESH_TESSELATION,
                 landmark_drawing_spec=None,
-                connection_drawing_spec=self.__paint_style.get_default_face_mesh_tesselation_style())
+                connection_drawing_spec=self.__paint_style.get_default_face_mesh_tesselation_style()
+            )
             self.__painter.draw_landmarks(
                 image=img,
                 landmark_list=face_landmarks,
                 connections=mp.solutions.face_mesh.FACEMESH_CONTOURS,
                 landmark_drawing_spec=None,
-                connection_drawing_spec=self.__paint_style.get_default_face_mesh_contours_style())
+                connection_drawing_spec=self.__paint_style.get_default_face_mesh_contours_style()
+            )
             self.__painter.draw_landmarks(
                 image=img,
                 landmark_list=face_landmarks,
                 connections=mp.solutions.face_mesh.FACEMESH_IRISES,
                 landmark_drawing_spec=None,
-                connection_drawing_spec=self.__paint_style.get_default_face_mesh_iris_connections_style())
+                connection_drawing_spec=self.__paint_style.get_default_face_mesh_iris_connections_style()
+            )

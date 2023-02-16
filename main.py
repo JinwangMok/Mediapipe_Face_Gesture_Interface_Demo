@@ -1,8 +1,11 @@
 import cv2
 import numpy as np
 import logging
+
+from logger import logger
 from utilized_face_mesh import Utilized_face_mesh
-from angles_of_face import Angles_of_face
+from face_information import Face_information
+from buffer_for_face_information import Buffer_for_face_information
 from _utils import *
 
 
@@ -20,40 +23,16 @@ FACE_MESH_PARAMS = {
 TARGET_FACE_LANDMARKS = {
     "nose_tip" :      1,
     "left_eye_tip" :  263,
+    "left_eye_upper" : 386,
+    "left_eye_under" :  374,
     "right_eye_tip" : 33,
-    "between_both_eyes" : 168
+    "right_eye_upper" : 159,
+    "right_eye_under" : 145,
 }
 
 
-def add_stream_handler_with_formatter(logger, formatter):
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-
-def erase_previous_log_file(filename="./log.txt"):
-    f = open(filename, 'w')
-    f.write("")
-    f.close()
-
-def add_file_handler_with_formatter(logger, formatter, filename="./log.txt"):
-    file_handler = logging.FileHandler('log.txt')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-
-def setup_logger(logger):
-    logger.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-    add_stream_handler_with_formatter(logger, formatter)
-    erase_previous_log_file()
-    add_file_handler_with_formatter(logger, formatter)
-    
-    logger.info("Set up logger")
-
 
 if __name__ == "__main__":
-    logger = logging.getLogger()
-    setup_logger(logger)
 
     cap = cv2.VideoCapture(CAM_NUM)
 
@@ -70,7 +49,7 @@ if __name__ == "__main__":
         if len(coordinates_of_multi_face) == 0:
             logger.info("No face detected.")
             continue
-        angle_of_single_face = Angles_of_face(coordinates_of_multi_face['0'])
+        face_information = Face_information(coordinates_of_multi_face['0'])
         face_mesh.paint_last_landmarks_to_image(image)
         
         # Test ###
@@ -84,9 +63,9 @@ if __name__ == "__main__":
         # cv2.putText(image, f"leftEye2nose: {l2n_dist}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (255, 0, 0), 1, cv2.LINE_AA)
         # cv2.putText(image, f"rightEye2nose: {r2n_dist}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (255, 0, 0), 1, cv2.LINE_AA)
         
-        cv2.putText(image, f"rolling_angle: {angle_of_single_face.rolling_angle}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
-        cv2.putText(image, f"tilting_angle: {angle_of_single_face.tilting_angle}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
-        cv2.putText(image, f"panning_angle: {angle_of_single_face.panning_angle}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        cv2.putText(image, f"rolling_angle: {face_information.rolling_angle}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        cv2.putText(image, f"tilting_angle: {face_information.tilting_angle}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        cv2.putText(image, f"panning_angle: {face_information.panning_angle}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
 
         # cv2.putText(image, f"tilting_angle: {angle_of_single_face.tilting_angle}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 0, 255), 1, cv2.LINE_AA)
         ###
