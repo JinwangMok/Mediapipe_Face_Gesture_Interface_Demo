@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Buffer_for_face_information():
     def __init__(
         self,

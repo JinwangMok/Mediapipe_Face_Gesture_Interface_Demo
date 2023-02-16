@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 from angles_of_face import Angles_of_face
 from state_of_both_eyes import State_of_both_eyes
 
+
 class Face_information(Angles_of_face, State_of_both_eyes):
     def __init__(self, coordinates_of_single_face:Dict[str, Tuple[np.float64]]):
         super().__init__(coordinates_of_single_face)

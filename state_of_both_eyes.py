@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Dict, Tuple
 
+
 class State_of_both_eyes():
     def __init__(self, coordinates_of_single_face:Dict[str, Tuple[np.float64]]):
         self.__left_eye_upper_coordinate = np.array(coordinates_of_single_face["left_eye_upper"], dtype=np.float64)

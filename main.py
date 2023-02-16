@@ -53,21 +53,12 @@ if __name__ == "__main__":
         face_mesh.paint_last_landmarks_to_image(image)
         
         # Test ###
-        
-        # TODO: 각도 계산 후 저장(향후 각도와 거리(z)를 이용하여 커서의 위치를 표현할 예정). depth는 음수일수록 카메라와 가까움을 의미
         image = cv2.flip(image, 1)
-        # l2n_dist = L2distnace(coordinates['0']['left_eye_tip'][0], coordinates['0']['left_eye_tip'][1], coordinates['0']['nose_tip'][0], coordinates['0']['nose_tip'][1])
-        # r2n_dist = L2distnace(coordinates['0']['right_eye_tip'][0], coordinates['0']['right_eye_tip'][1], coordinates['0']['nose_tip'][0], coordinates['0']['nose_tip'][1])
-        # if np.abs(l2n_dist - r2n_dist) > 30:
-        #     cv2.putText(image, "Panning!", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 0, 255), 1, cv2.LINE_AA)
-        # cv2.putText(image, f"leftEye2nose: {l2n_dist}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (255, 0, 0), 1, cv2.LINE_AA)
-        # cv2.putText(image, f"rightEye2nose: {r2n_dist}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (255, 0, 0), 1, cv2.LINE_AA)
         
         cv2.putText(image, f"rolling_angle: {face_information.rolling_angle}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
         cv2.putText(image, f"tilting_angle: {face_information.tilting_angle}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
         cv2.putText(image, f"panning_angle: {face_information.panning_angle}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
 
-        # cv2.putText(image, f"tilting_angle: {angle_of_single_face.tilting_angle}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 0, 255), 1, cv2.LINE_AA)
         ###
 
         cv2.imshow('MediaPipe Face Mesh', image)
