@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 import logging
-
 from logger import logger
+
 from utilized_face_mesh import Utilized_face_mesh
-from face_information import Face_information
+from face_info_per_frame import Face_info_per_frame
 from buffer_for_face_information import Buffer_for_face_information
 from _utils import *
 
@@ -31,11 +31,8 @@ TARGET_FACE_LANDMARKS = {
 }
 
 
-
 if __name__ == "__main__":
-
     cap = cv2.VideoCapture(CAM_NUM)
-
     face_mesh = Utilized_face_mesh(**FACE_MESH_PARAMS)
     with face_mesh:
       while cap.isOpened():
@@ -49,15 +46,17 @@ if __name__ == "__main__":
         if len(coordinates_of_multi_face) == 0:
             logger.info("No face detected.")
             continue
-        face_information = Face_information(coordinates_of_multi_face['0'])
+        face_info_per_frame = Face_info_per_frame(coordinates_of_multi_face['0'])
         face_mesh.paint_last_landmarks_to_image(image)
         
         # Test ###
         image = cv2.flip(image, 1)
         
-        cv2.putText(image, f"rolling_angle: {face_information.rolling_angle}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
-        cv2.putText(image, f"tilting_angle: {face_information.tilting_angle}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
-        cv2.putText(image, f"panning_angle: {face_information.panning_angle}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        cv2.putText(image, f"eye_state_upper: {face_info_per_frame.left_eye_state}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        cv2.putText(image, f"eye_state_under: {face_info_per_frame.right_eye_state}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        # cv2.putText(image, f"rolling_angle: {face_info_per_frame.rolling_angle}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        # cv2.putText(image, f"tilting_angle: {face_info_per_frame.tilting_angle}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
+        # cv2.putText(image, f"panning_angle: {face_info_per_frame.panning_angle}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
 
         ###
 
