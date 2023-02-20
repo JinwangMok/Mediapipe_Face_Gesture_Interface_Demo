@@ -1,4 +1,2 @@
-import numpy as np
-
-def L2distnace(x1, y1, x2, y2):
-  return np.power(np.power(x1 - x2, 2) + np.power(y1 - y2, 2), 0.5)
+def is_empty(collection_type):
+    return len(collection_type) == 0

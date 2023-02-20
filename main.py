@@ -5,8 +5,8 @@ from logger import logger
 
 from utilized_face_mesh import Utilized_face_mesh
 from face_info_per_frame import Face_info_per_frame
-from buffer_for_face_information import Buffer_for_face_information
-from _utils import *
+from buffer_for_face_info import Buffer_for_face_info
+from _utils import is_empty
 
 
 CAM_NUM = 1
@@ -34,6 +34,7 @@ TARGET_FACE_LANDMARKS = {
 if __name__ == "__main__":
     cap = cv2.VideoCapture(CAM_NUM)
     face_mesh = Utilized_face_mesh(**FACE_MESH_PARAMS)
+    buffer_for_face_info = Buffer_for_face_info(max_size=100)
     with face_mesh:
       while cap.isOpened():
         success, image = cap.read()
@@ -43,10 +44,13 @@ if __name__ == "__main__":
           continue
         
         coordinates_of_multi_face = face_mesh.get_3D_coordinates_from_bgr_image(image, TARGET_FACE_LANDMARKS)
-        if len(coordinates_of_multi_face) == 0:
+        if is_empty(coordinates_of_multi_face):
             logger.info("No face detected.")
             continue
+
         face_info_per_frame = Face_info_per_frame(coordinates_of_multi_face['0'])
+        buffer_for_face_info.push_back(face_info_per_frame)
+
         face_mesh.paint_last_landmarks_to_image(image)
         
         # Test ###

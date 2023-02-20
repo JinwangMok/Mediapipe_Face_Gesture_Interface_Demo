@@ -18,7 +18,7 @@ class Face_info_per_frame():
         self.tilting_angle = self._get_angle_of_tilting_direction()
         self.panning_angle = self._get_angle_of_panning_direction()
 
-        self.left_eye_state, self.right_eye_state = self._get_open_close_state_of_both_eyes()  # open:1, close:0
+        self.left_eye_state, self.right_eye_state = self._get_open_close_state_of_both_eyes()  #open:1, close:0
 
     
     def _get_angle_of_rolling_direction(self)->np.float64:
@@ -26,7 +26,7 @@ class Face_info_per_frame():
         right_eye_tip_xy_point = np.array(self.__right_eye_tip_coordinate[:2])
 
         gradient = self.__get_gradient(right_eye_tip_xy_point, left_eye_tip_xy_point)
-        angle = np.arctan(gradient) * 180/np.pi  # [-90, 90] degree
+        angle = np.arctan(gradient) * 180/np.pi  #[-90, 90] degree
         
         return angle
         
@@ -74,7 +74,7 @@ class Face_info_per_frame():
 
 
     def _get_open_close_state_of_both_eyes(self)->Tuple[np.bool]:
-        # open:True, close:False
+        #open:True, close:False
         left_eye_upper_y, left_eye_under_y = self.__left_eye_upper_coordinate[1], self.__left_eye_under_coordinate[1]
         right_eye_upper_y, right_eye_under_y = self.__right_eye_upper_coordinate[1], self.__right_eye_under_coordinate[1]
         
