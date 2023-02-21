@@ -86,5 +86,5 @@ class Face_info_per_frame():
             left_eye_state = np.bool(False)
         if right_eye_under_y - right_eye_upper_y < threshold:
             right_eye_state = np.bool(False)
-
+        
         return (left_eye_state, right_eye_state)
