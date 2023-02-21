@@ -8,8 +8,9 @@ from utilized_face_mesh import Utilized_face_mesh
 from face_info_per_frame import Face_info_per_frame
 from face_angle_stabilizer import Face_angle_stabilizer
 from buffer_for_face_info import Buffer_for_face_info
+from cursor_position_calculator import Cursor_position_calculator
+from buffer_for_cursor_position import Buffer_for_cursor_position
 from gesture_producer import Gesture_producer
-from buffer_for_gesture_info import Buffer_for_gesture_info
 from _utils import is_empty
 
 
@@ -42,7 +43,10 @@ if __name__ == "__main__":
         showing_result = ""
         face_angle_stabilizer = Face_angle_stabilizer(stabilize_time=3.)
         buffer_for_face_info = Buffer_for_face_info(max_size=100)
-        gesture_producer = Gesture_producer(display_width=WIDTH, display_height=HEIGHT)
+        cursor_position_calculator = Cursor_position_calculator(display_width=WIDTH, display_height=HEIGHT)
+        buffer_for_cursor_position = Buffer_for_cursor_position(max_size=100)
+        gesture_producer = Gesture_producer(initial_cursor_position=(np.int32(WIDTH/2), np.int32(HEIGHT/2)))
+
         while cap.isOpened():
             success, image = cap.read()
             display = np.zeros((HEIGHT, WIDTH, 1), np.uint8)
@@ -60,8 +64,16 @@ if __name__ == "__main__":
             stabilized_face_info_per_frame = face_angle_stabilizer.stablize_angles(face_info_per_frame)
             buffer_for_face_info.push_back(stabilized_face_info_per_frame)
             
-            result:Dict = gesture_producer.get_gesture_info_from_face_info_buffer(buffer_for_face_info)
+            cursor_position_per_frame = cursor_position_calculator.calculate_cursor_position_from_face_info(stabilized_face_info_per_frame)
+            buffer_for_cursor_position.push_back(cursor_position_per_frame)
+
+            result:Dict = gesture_producer.produce_gesture(buffer_for_face_info, buffer_for_cursor_position)
             cursor_position = result['cursor_position']
+            if not result['gesture'] == "None gesture recognized.":
+                showing_result = result['gesture']
+            if result['gesture'] == "interface_enable":
+                face_angle_stabilizer.initialize()
+
             face_mesh.paint_last_landmarks_to_image(image)
         
             # Test ###

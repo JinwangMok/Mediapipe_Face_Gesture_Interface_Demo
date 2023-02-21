@@ -3,64 +3,60 @@ import logging
 from logger import logger
 from typing import Dict, Tuple
 from buffer_for_face_info import Buffer_for_face_info
+from buffer_for_cursor_position import Buffer_for_cursor_position
 
 
 class Gesture_producer():
     def __init__(
         self,
-        display_width,
-        display_height
+        initial_cursor_position:Tuple[np.int32]
         ):
-        self.buffer_for_face_info:Buffer_for_face_info
+        self.initial_cursor_position = initial_cursor_position
 
-        self.flag_for_interface_enable = False
-        self.flag_for_double_click = False
-        self.last_frame_time_when_click = np.float64(0.)
+        self.__buffer_for_face_info:Buffer_for_face_info
+        self.__buffer_for_cursor_position:Buffer_for_cursor_position
+
+        self.__flag_for_interface_enable = False
+        self.__flag_for_double_click = False
+        self.__flag_for_drag = False
+        self.__last_frame_time_when_click = np.float64(0.)
 
         self.threshold_for_rolling = np.float64(40.)
         self.threshold_for_min_eye_closing_time = np.float64(0.2)
         self.threshold_for_max_eye_closing_time = np.float64(3.)
+        self.threshold_for_right_click_to_drag_eye_closing_time = np.float64(1.)
         self.threshold_for_max_click_interval_time = np.float64(2.)
 
-        self.dx, self.dy = self.__get_initial_depth_parameter(display_width, display_height)
-        self.x_center = np.int32(display_width/2)
-        self.y_center = np.int32(display_height/2)
 
-
-    def get_gesture_info_from_face_info_buffer(
+    def produce_gesture(
         self,
-        buffer_for_face_info
+        buffer_for_face_info,
+        buffer_for_cursor_position
         )->Dict:
-        self.buffer_for_face_info = buffer_for_face_info
+        self.__buffer_for_face_info = buffer_for_face_info
+        self.__buffer_for_cursor_position = buffer_for_cursor_position
 
-        cursor_position = self.__calculate_cursor_position_from_face_info_buffer()
+        cursor_position = self.__buffer_for_cursor_position.cursor_position_buffer[-1]
         gesture = self.__calculate_gesture_from_face_info_buffer()
+
+        if gesture == "interface_disable":
+            cursor_position = self.initial_cursor_position
+
         result = {
             "cursor_position": cursor_position,
             "gesture": gesture
         }
+
         return result
 
 
-    def __calculate_cursor_position_from_face_info_buffer(self)->Tuple[np.int32]:
-        # TODO: If cursor position looks unstable, add kalman filtering.
-        last_face_info, last_frame_time = self.buffer_for_face_info.face_info_buffer[-1]
-        
-        theta_x = self.__degree_to_radian(-last_face_info.panning_angle)
-        theta_y = self.__degree_to_radian(last_face_info.tilting_angle)
-
-        x = np.int32(np.tan(theta_x) * self.dx) + self.x_center
-        y = np.int32(np.tan(theta_y) * self.dy) + self.y_center
-        
-        return (x, y)
-
     def __calculate_gesture_from_face_info_buffer(self):
-        if len(self.buffer_for_face_info.face_info_buffer) < 2:
+        if len(self.__buffer_for_face_info.face_info_buffer) < 2:
             return "Preparing to recognize gesture..."
 
         if self.__is_interface_disabled():
             if self.__is_interface_on_off():
-                self.flag_for_interface_enable = True
+                self.__flag_for_interface_enable = True
                 return "interface_enable"
             else:
                 return "interface_disable"
@@ -72,27 +68,35 @@ class Gesture_producer():
         
         if self.__is_click():
             if self.__is_double_click():
-                self.flag_for_double_click = False
-                self.last_frame_time_when_click = self.buffer_for_face_info.face_info_buffer[-1][1]
+                self.__flag_for_double_click = False
+                self.__last_frame_time_when_click = self.__buffer_for_face_info.face_info_buffer[-1][1]
                 return "double_click"
             else:
-                self.flag_for_double_click = True
-                self.last_frame_time_when_click = self.buffer_for_face_info.face_info_buffer[-1][1]
+                self.__flag_for_double_click = True
+                self.__last_frame_time_when_click = self.__buffer_for_face_info.face_info_buffer[-1][1]
                 return "left_click"
 
         if self.__is_right_click():
-            # 여기는 만약 제스처 인포로 통합할 경우면 포인터 이동이랑 함께 구현해야 함
             return "right_click"
+        
+        if self.__is_drag():
+            self.__flag_for_drag = True
+            logger.info("draging")
+            return "drag"
+        
+        if self.__is_drop():
+            self.__flag_for_drag = False
+            return "drop"
 
         if self.__is_interface_on_off():
-                self.flag_for_interface_enable = False
+                self.__flag_for_interface_enable = False
                 return "interface_disable"
         
         return "None gesture recognized."
     
 
     def __is_left_side_rolling(self):
-        last_face_info, _ = self.buffer_for_face_info.face_info_buffer[-1]
+        last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-1]
         
         if last_face_info.rolling_angle > self.threshold_for_rolling:
             return True
@@ -101,7 +105,7 @@ class Gesture_producer():
 
 
     def __is_right_side_rolling(self):
-        last_face_info, _ = self.buffer_for_face_info.face_info_buffer[-1]
+        last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-1]
         
         if last_face_info.rolling_angle < -self.threshold_for_rolling:
             return True
@@ -110,15 +114,15 @@ class Gesture_producer():
 
 
     def __is_click(self):
-        last_face_info, last_frame_time = self.buffer_for_face_info.face_info_buffer[-1]
-        before_the_last_face_info, _ = self.buffer_for_face_info.face_info_buffer[-2]
+        last_face_info, last_frame_time = self.__buffer_for_face_info.face_info_buffer[-1]
+        before_the_last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-2]
 
         if not self.__is_both_eyes_opened(last_face_info.left_eye_state, last_face_info.right_eye_state):
             return False
         if not self.__is_both_eyes_closed(before_the_last_face_info.left_eye_state, before_the_last_face_info.right_eye_state):
             return False
 
-        face_info_buffer_inverse = self.buffer_for_face_info.face_info_buffer[::-1]
+        face_info_buffer_inverse = self.__buffer_for_face_info.face_info_buffer[::-1]
         accumulated_time = np.float64(0.)
         for face_info, frame_time in face_info_buffer_inverse[1:]:
             if self.__is_both_eyes_closed(face_info.left_eye_state, face_info.right_eye_state):
@@ -134,26 +138,26 @@ class Gesture_producer():
 
 
     def __is_double_click(self):
-        if not self.flag_for_double_click:
+        if not self.__flag_for_double_click:
             return False
 
-        _, last_frame_time = self.buffer_for_face_info.face_info_buffer[-1]
-        if last_frame_time - self.last_frame_time_when_click > self.threshold_for_max_click_interval_time:
+        _, last_frame_time = self.__buffer_for_face_info.face_info_buffer[-1]
+        if last_frame_time - self.__last_frame_time_when_click > self.threshold_for_max_click_interval_time:
             return False
         
         return True
 
 
     def __is_right_click(self):
-        last_face_info, last_frame_time = self.buffer_for_face_info.face_info_buffer[-1]
-        before_the_last_face_info, _ = self.buffer_for_face_info.face_info_buffer[-2]
+        last_face_info, last_frame_time = self.__buffer_for_face_info.face_info_buffer[-1]
+        before_the_last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-2]
 
         if not self.__is_both_eyes_opened(last_face_info.left_eye_state, last_face_info.right_eye_state):
             return False
         if not self.__is_single_eye_opened(before_the_last_face_info.left_eye_state, before_the_last_face_info.right_eye_state):
             return False
         
-        face_info_buffer_inverse = self.buffer_for_face_info.face_info_buffer[::-1]
+        face_info_buffer_inverse = self.__buffer_for_face_info.face_info_buffer[::-1]
         accumulated_time = np.float64(0.)
         for face_info, frame_time in face_info_buffer_inverse[1:]:
             if self.__is_single_eye_opened(face_info.left_eye_state, face_info.right_eye_state):
@@ -168,16 +172,53 @@ class Gesture_producer():
         return False
     
 
+    def __is_drag(self):
+        last_face_info, last_frame_time = self.__buffer_for_face_info.face_info_buffer[-1]
+        before_the_last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-2]
+
+        if not self.__is_single_eye_opened(last_face_info.left_eye_state, last_face_info.right_eye_state):
+            return False
+        if not self.__is_single_eye_opened(before_the_last_face_info.left_eye_state, before_the_last_face_info.right_eye_state):
+            return False
+        
+        face_info_buffer_inverse = self.__buffer_for_face_info.face_info_buffer[::-1]
+        accumulated_time = np.float64(0.)
+        for face_info, frame_time in face_info_buffer_inverse[1:]:
+            if self.__is_single_eye_opened(face_info.left_eye_state, face_info.right_eye_state):
+                accumulated_time += last_frame_time - frame_time
+                last_frame_time = frame_time
+            else:
+                break
+        if accumulated_time > self.threshold_for_right_click_to_drag_eye_closing_time:
+            return True
+
+        return False
+    
+    
+    def __is_drop(self):
+        last_face_info, last_frame_time = self.__buffer_for_face_info.face_info_buffer[-1]
+        before_the_last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-2]
+
+        if self.__flag_for_drag == False:
+            return False
+        if not self.__is_both_eyes_opened(last_face_info.left_eye_state, last_face_info.right_eye_state):
+            return False
+        if not self.__is_single_eye_opened(before_the_last_face_info.left_eye_state, before_the_last_face_info.right_eye_state):
+            return False
+        
+        return True
+
+
     def __is_interface_on_off(self):
-        last_face_info, last_frame_time = self.buffer_for_face_info.face_info_buffer[-1]
-        before_the_last_face_info, _ = self.buffer_for_face_info.face_info_buffer[-2]
+        last_face_info, last_frame_time = self.__buffer_for_face_info.face_info_buffer[-1]
+        before_the_last_face_info, _ = self.__buffer_for_face_info.face_info_buffer[-2]
 
         if not self.__is_both_eyes_opened(last_face_info.left_eye_state, last_face_info.right_eye_state):
             return False
         if not self.__is_both_eyes_closed(before_the_last_face_info.left_eye_state, before_the_last_face_info.right_eye_state):
             return False
 
-        face_info_buffer_inverse = self.buffer_for_face_info.face_info_buffer[::-1]
+        face_info_buffer_inverse = self.__buffer_for_face_info.face_info_buffer[::-1]
         accumulated_time = np.float64(0.)
         for face_info, frame_time in face_info_buffer_inverse[1:]:
             if self.__is_both_eyes_closed(face_info.left_eye_state, face_info.right_eye_state):
@@ -193,7 +234,7 @@ class Gesture_producer():
 
 
     def __is_interface_disabled(self):
-        if self.flag_for_interface_enable:
+        if self.__flag_for_interface_enable:
             return False
         
         return True
@@ -230,22 +271,3 @@ class Gesture_producer():
             return False
 
         return True
-
-
-    def __get_initial_depth_parameter(
-        self,
-        width,
-        height,
-        max_theta=4.,
-        margin=100
-        )->Tuple[np.float64]:
-        dx = np.float64((width/2 + margin) / np.tan(self.__degree_to_radian(max_theta)))
-        dy = np.float64((height/2 + margin) / np.tan(self.__degree_to_radian(max_theta)))
-
-        return (dx, dy)
-    
-    def __degree_to_radian(
-        self,
-        theta:np.float64
-        )->np.float64:
-        return np.float64(theta * np.pi / 180.)
