@@ -1,7 +1,8 @@
 import time
 import numpy as np
-from face_info_per_frame import Face_info_per_frame
 from typing import Dict
+
+from components.face_info_per_frame import Face_info_per_frame
 
 
 class Face_angle_stabilizer():
@@ -42,7 +43,7 @@ class Face_angle_stabilizer():
     def stablize_angles(
         self, 
         face_info:Face_info_per_frame,
-        )->Face_info_per_frame:
+    )->Face_info_per_frame:
         if self.__is_ready():
             face_info.rolling_angle -= self.mean_of_angles["rolling"]
             face_info.tilting_angle -= self.mean_of_angles["tilting"]
@@ -86,7 +87,7 @@ class Face_angle_stabilizer():
     def __calculate_mean_rolling_angle(
         self,
         rolling_angle:np.float64
-        )->np.float64:
+    )->np.float64:
         self.__sum_of_angles["rolling"] += rolling_angle
         self.mean_of_angles["rolling"] = self.__sum_of_angles["rolling"] / self.__frame_count
 
@@ -94,7 +95,7 @@ class Face_angle_stabilizer():
     def __calculate_mean_tilting_angle(
         self,
         tilting_angle:np.float64
-        )->np.float64:
+    )->np.float64:
         self.__sum_of_angles["tilting"] += tilting_angle
         self.mean_of_angles["tilting"] = self.__sum_of_angles["tilting"] / self.__frame_count
 
@@ -102,6 +103,6 @@ class Face_angle_stabilizer():
     def __calculate_mean_panning_angle(
         self,
         panning_angle:np.float64
-        )->np.float64:
+    )->np.float64:
         self.__sum_of_angles["panning"] += panning_angle
         self.mean_of_angles["panning"] = self.__sum_of_angles["panning"] / self.__frame_count

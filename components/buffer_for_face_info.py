@@ -4,14 +4,15 @@ from typing import List, Tuple
 from copy import deepcopy
 import logging
 from logger import logger
-from face_info_per_frame import Face_info_per_frame
+
+from components.face_info_per_frame import Face_info_per_frame
 
 
 class Buffer_for_face_info():
     def __init__(
         self,
         max_size:int=100,
-        ):
+    ):
         self.face_info_buffer:List[Tuple] = []
         self.max_size = max_size
     
@@ -19,7 +20,7 @@ class Buffer_for_face_info():
     def push_back(
         self,
         face_info:Face_info_per_frame
-        ):
+    ):
         if self.__is_full():
             _ = self.__pop_first()
         self.face_info_buffer.append((

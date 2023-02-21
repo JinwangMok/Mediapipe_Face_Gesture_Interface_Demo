@@ -1,6 +1,7 @@
 import numpy as np
 from typing import List, Tuple
 from copy import deepcopy
+
 import logging
 from logger import logger
 
@@ -9,7 +10,7 @@ class Buffer_for_cursor_position():
     def __init__(
         self,
         max_size:int=100,
-        ):
+    ):
         self.cursor_position_buffer:List[Tuple] = []
         self.max_size = max_size
     
@@ -17,7 +18,7 @@ class Buffer_for_cursor_position():
     def push_back(
         self,
         cursor_position:Tuple[np.int32]
-        ):
+    ):
         if self.__is_full():
             _ = self.__pop_first()
         self.cursor_position_buffer.append(cursor_position)

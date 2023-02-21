@@ -1,0 +1,39 @@
+name: py_face_gesture
+channels:
+  - conda-forge
+dependencies:
+  - libcxx=14.0.6=hccf4f1f_0
+  - libffi=3.4.2=h0d85af4_5
+  - libsqlite=3.40.0=ha978bb4_0
+  - libzlib=1.2.13=hfd90126_4
+  - ncurses=6.3=h96cf925_1
+  - openssl=3.0.7=hfd90126_1
+  - pip=22.3.1=pyhd8ed1ab_0
+  - python=3.7.12=hf3644f1_100_cpython
+  - readline=8.1.2=h3899abd_0
+  - setuptools=66.0.0=pyhd8ed1ab_0
+  - sqlite=3.40.0=h9ae0607_0
+  - tk=8.6.12=h5dbffcc_0
+  - wheel=0.38.4=pyhd8ed1ab_0
+  - xz=5.2.6=h775f41a_0
+  - pip:
+      - absl-py==1.4.0
+      - attrs==22.2.0
+      - cycler==0.11.0
+      - flatbuffers==23.1.4
+      - fonttools==4.38.0
+      - kiwisolver==1.4.4
+      - matplotlib==3.5.3
+      - mediapipe==0.9.0.1
+      - numpy==1.21.6
+      - opencv-contrib-python==4.7.0.68
+      - opencv-python==4.7.0.68
+      - packaging==23.0
+      - pillow==9.4.0
+      - protobuf==3.20.3
+      - pyparsing==3.0.9
+      - python-dateutil==2.8.2
+      - scipy==1.7.3
+      - six==1.16.0
+      - typing-extensions==4.4.0
+prefix: /opt/homebrew/Caskroom/miniforge/base/envs/py_face_gesture

@@ -2,15 +2,16 @@ import numpy as np
 import logging
 from logger import logger
 from typing import Dict, Tuple
-from buffer_for_face_info import Buffer_for_face_info
-from buffer_for_cursor_position import Buffer_for_cursor_position
+
+from components.buffer_for_face_info import Buffer_for_face_info
+from components.buffer_for_cursor_position import Buffer_for_cursor_position
 
 
 class Gesture_producer():
     def __init__(
         self,
         initial_cursor_position:Tuple[np.int32]
-        ):
+    ):
         self.initial_cursor_position = initial_cursor_position
 
         self.__buffer_for_face_info:Buffer_for_face_info
@@ -21,7 +22,7 @@ class Gesture_producer():
         self.__flag_for_drag = False
         self.__last_frame_time_when_click = np.float64(0.)
 
-        self.threshold_for_rolling = np.float64(40.)
+        self.threshold_for_rolling = np.float64(35.)
         self.threshold_for_min_eye_closing_time = np.float64(0.2)
         self.threshold_for_max_eye_closing_time = np.float64(3.)
         self.threshold_for_right_click_to_drag_eye_closing_time = np.float64(1.)
@@ -32,7 +33,7 @@ class Gesture_producer():
         self,
         buffer_for_face_info,
         buffer_for_cursor_position
-        )->Dict:
+    )->Dict:
         self.__buffer_for_face_info = buffer_for_face_info
         self.__buffer_for_cursor_position = buffer_for_cursor_position
 
@@ -81,7 +82,6 @@ class Gesture_producer():
         
         if self.__is_drag():
             self.__flag_for_drag = True
-            logger.info("draging")
             return "drag"
         
         if self.__is_drop():
@@ -244,7 +244,7 @@ class Gesture_producer():
         self,
         left_eye_state,
         right_eye_state
-        ):
+    ):
         if left_eye_state != right_eye_state:
             return True
         
@@ -255,7 +255,7 @@ class Gesture_producer():
         self,
         left_eye_state,
         right_eye_state
-        ):
+    ):
         if left_eye_state and right_eye_state:
             return True
 
@@ -266,7 +266,7 @@ class Gesture_producer():
         self,
         left_eye_state,
         right_eye_state
-        ):
+    ):
         if left_eye_state or right_eye_state:
             return False
 

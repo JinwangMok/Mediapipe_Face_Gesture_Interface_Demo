@@ -5,7 +5,10 @@ from logger import logger
 
 
 class Face_info_per_frame():
-    def __init__(self, coordinates_of_single_face:Dict[str, Tuple[np.float64]]):
+    def __init__(
+        self,
+        coordinates_of_single_face:Dict[str, Tuple[np.float64]]
+    ):
         self.__nose_tip_coordinate = np.array(coordinates_of_single_face["nose_tip"], dtype=np.float64)
         self.__left_eye_tip_coordinate = np.array(coordinates_of_single_face["left_eye_tip"], dtype=np.float64)
         self.__left_eye_upper_coordinate = np.array(coordinates_of_single_face["left_eye_upper"], dtype=np.float64)
@@ -55,7 +58,7 @@ class Face_info_per_frame():
         self,
         vec_1:np.array,
         vec_2:np.array
-        )->np.float64:
+    )->np.float64:
         displacement_vec = vec_1 - vec_2   
         gradient = np.divide(displacement_vec[1], displacement_vec[0], dtype=np.float64)
         
@@ -66,7 +69,7 @@ class Face_info_per_frame():
         self,
         vec_1:np.array,
         vec_2:np.array
-        )->np.float64:
+    )->np.float64:
         displacement_vec = vec_1 - vec_2
         norm = np.sqrt(np.power((displacement_vec[0]),2) + np.power(displacement_vec[1],2))
         
