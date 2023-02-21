@@ -5,26 +5,65 @@ from typing import Dict, Tuple
 from buffer_for_face_info import Buffer_for_face_info
 
 
-class Gesture_recognizer():
-    def __init__(self, display_width, display_height):
+class Gesture_producer():
+    def __init__(
+        self,
+        display_width,
+        display_height
+        ):
         self.buffer_for_face_info:Buffer_for_face_info
 
         self.flag_for_interface_enable = False
         self.flag_for_double_click = False
         self.last_frame_time_when_click = np.float64(0.)
 
-        self.dx, self.dy = self.__get_initial_depth_parameter(display_width, display_height)
         self.threshold_for_rolling = np.float64(40.)
         self.threshold_for_min_eye_closing_time = np.float64(0.2)
         self.threshold_for_max_eye_closing_time = np.float64(3.)
         self.threshold_for_max_click_interval_time = np.float64(2.)
 
+        self.dx, self.dy = self.__get_initial_depth_parameter(display_width, display_height)
+        self.x_center = np.int32(display_width/2)
+        self.y_center = np.int32(display_height/2)
 
-    def recognize_gesture_from_face_info_buffer(self, buffer_for_face_info):
+
+    def get_gesture_info_from_face_info_buffer(
+        self,
+        buffer_for_face_info
+        )->Dict:
         self.buffer_for_face_info = buffer_for_face_info
 
+        cursor_position = self.__calculate_cursor_position_from_face_info_buffer()
+        gesture = self.__calculate_gesture_from_face_info_buffer()
+        result = {
+            "cursor_position": cursor_position,
+            "gesture": gesture
+        }
+        return result
+
+
+    def __calculate_cursor_position_from_face_info_buffer(self)->Tuple[np.int32]:
+        # TODO: If cursor position looks unstable, add kalman filtering.
+        last_face_info, last_frame_time = self.buffer_for_face_info.face_info_buffer[-1]
+        
+        theta_x = self.__degree_to_radian(-last_face_info.panning_angle)
+        theta_y = self.__degree_to_radian(last_face_info.tilting_angle)
+
+        x = np.int32(np.tan(theta_x) * self.dx) + self.x_center
+        y = np.int32(np.tan(theta_y) * self.dy) + self.y_center
+        
+        return (x, y)
+
+    def __calculate_gesture_from_face_info_buffer(self):
         if len(self.buffer_for_face_info.face_info_buffer) < 2:
-            return "Ready to recognize gesture."
+            return "Preparing to recognize gesture..."
+
+        if self.__is_interface_disabled():
+            if self.__is_interface_on_off():
+                self.flag_for_interface_enable = True
+                return "interface_enable"
+            else:
+                return "interface_disable"
 
         if self.__is_left_side_rolling():
             return "scroll_up"
@@ -46,10 +85,6 @@ class Gesture_recognizer():
             return "right_click"
 
         if self.__is_interface_on_off():
-            if self.__is_interface_enable():
-                self.flag_for_interface_enable = True
-                return "interface_enable"
-            else:
                 self.flag_for_interface_enable = False
                 return "interface_disable"
         
@@ -157,7 +192,7 @@ class Gesture_recognizer():
         return False
 
 
-    def __is_interface_enable(self):
+    def __is_interface_disabled(self):
         if self.flag_for_interface_enable:
             return False
         
@@ -202,8 +237,15 @@ class Gesture_recognizer():
         width,
         height,
         max_theta=4.,
-        margin=100)->Tuple[np.float64]:
-        dx = np.float64((width + margin) / (2. * np.tan(max_theta)))
-        dy = np.float64((height + margin) / (2. * np.tan(max_theta)))
+        margin=100
+        )->Tuple[np.float64]:
+        dx = np.float64((width/2 + margin) / np.tan(self.__degree_to_radian(max_theta)))
+        dy = np.float64((height/2 + margin) / np.tan(self.__degree_to_radian(max_theta)))
 
         return (dx, dy)
+    
+    def __degree_to_radian(
+        self,
+        theta:np.float64
+        )->np.float64:
+        return np.float64(theta * np.pi / 180.)

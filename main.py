@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from typing import Dict
 import logging
 from logger import logger
 
@@ -7,7 +8,7 @@ from utilized_face_mesh import Utilized_face_mesh
 from face_info_per_frame import Face_info_per_frame
 from face_angle_stabilizer import Face_angle_stabilizer
 from buffer_for_face_info import Buffer_for_face_info
-from gesture_recognizer import Gesture_recognizer
+from gesture_producer import Gesture_producer
 from buffer_for_gesture_info import Buffer_for_gesture_info
 from _utils import is_empty
 
@@ -41,9 +42,10 @@ if __name__ == "__main__":
         showing_result = ""
         face_angle_stabilizer = Face_angle_stabilizer(stabilize_time=3.)
         buffer_for_face_info = Buffer_for_face_info(max_size=100)
-        gesture_recognizer = Gesture_recognizer(display_width=WIDTH, display_height=HEIGHT)
+        gesture_producer = Gesture_producer(display_width=WIDTH, display_height=HEIGHT)
         while cap.isOpened():
             success, image = cap.read()
+            display = np.zeros((HEIGHT, WIDTH, 1), np.uint8)
             if not success:
                 logger.warning("Ignoring empty camera frame.")
                 # If loading a video, use 'break' instead of 'continue'.
@@ -58,10 +60,8 @@ if __name__ == "__main__":
             stabilized_face_info_per_frame = face_angle_stabilizer.stablize_angles(face_info_per_frame)
             buffer_for_face_info.push_back(stabilized_face_info_per_frame)
             
-            result:str = gesture_recognizer.recognize_gesture_from_face_info_buffer(buffer_for_face_info)
-            if result != "None gesture recognized.":
-                showing_result = result
-
+            result:Dict = gesture_producer.get_gesture_info_from_face_info_buffer(buffer_for_face_info)
+            cursor_position = result['cursor_position']
             face_mesh.paint_last_landmarks_to_image(image)
         
             # Test ###
@@ -73,6 +73,7 @@ if __name__ == "__main__":
             cv2.putText(image, f"tilting_angle: {face_info_per_frame.tilting_angle:.3f}", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
             cv2.putText(image, f"panning_angle: {face_info_per_frame.panning_angle:.3f}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
             cv2.putText(image, f"gesture_result: {showing_result}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 0, 255), 3, cv2.LINE_AA)
+            cv2.circle(display, cursor_position, 5, (255, 255, 255), -1)
             # cv2.putText(image, f"accumulated_time: {face_angle_stabilizer.accumulated_time}", (10, 180), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
             # cv2.putText(image, f"rolling_angle: {face_angle_stabilizer.mean_of_angles['rolling']}", (10, 210), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
             # cv2.putText(image, f"tilting_angle: {face_angle_stabilizer.mean_of_angles['tilting']}", (10, 240), cv2.FONT_HERSHEY_SIMPLEX, 1., (0, 255, 0), 3, cv2.LINE_AA)
@@ -81,6 +82,7 @@ if __name__ == "__main__":
             ###
 
             cv2.imshow('MediaPipe Face Mesh', image)
+            cv2.imshow('Face Interface Display', display)
 
             if cv2.waitKey(5) & 0xFF == 27:
                 break
