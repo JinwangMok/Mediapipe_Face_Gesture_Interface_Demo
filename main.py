@@ -1,15 +1,19 @@
 import cv2
 import logging
 from logger import logger
+import argparse
 
 from utilized_face_mesh import Utilized_face_mesh
 from face_gesture_processor import Face_gesture_processor
 from painter import Painter
 
+parser = argparse.ArgumentParser()
 
-CAM_NUM = 1
-WIDTH = 1280
-HEIGHT = 720
+parser.add_argument('--cam_num', type=int, default=0)
+parser.add_argument('--canvas_width', type=int, default=1280)
+parser.add_argument('--canvas_height', type=int, default=720)
+
+args = parser.parse_args()
 
 FACE_MESH_PARAMS = {
     "max_num_faces" : 1,
@@ -30,11 +34,11 @@ TARGET_FACE_LANDMARKS = {
 
 
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(CAM_NUM)
+    cap = cv2.VideoCapture(args.cam_num)
     face_mesh = Utilized_face_mesh(**FACE_MESH_PARAMS)
     with face_mesh:
-        processor = Face_gesture_processor(face_mesh, WIDTH, HEIGHT)
-        painter = Painter(face_mesh, WIDTH, HEIGHT)
+        processor = Face_gesture_processor(face_mesh, args.canvas_width, args.canvas_height)
+        painter = Painter(face_mesh, args.canvas_width, args.canvas_height)
         while cap.isOpened():
             success, camera_frame = cap.read()
             if not success:
