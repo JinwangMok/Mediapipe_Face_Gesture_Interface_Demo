@@ -2,6 +2,23 @@
 
 > This project targeting to develop a gesture interface using media-pipe framework for contributing to industry-academia cooperation.
 
+## Demo
+[Example Video](./demo.mp4)
+
+## Available operations
+
+|Operation|Action|
+|:-|:-|
+|Movement of the cursor|Movement of the face|
+|Left click|Blink both eyes (single time)|
+|Double click|Blink both eyes (two times)|
+|Right click|Blink single eye (single time)|
+|Drag|Move face while right-clicking|
+|Drop|Open closed eye while dragging|
+|Scroll-up|Roll face to the left|
+|Scroll-down|Roll face to the right|
+|Interface-enable/disable|Close both eyes more than 3s and then Open|
+
 ## Usage
 
 1. Download zip file and unzip.
