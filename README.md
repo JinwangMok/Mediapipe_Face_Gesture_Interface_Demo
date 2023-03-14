@@ -3,7 +3,8 @@
 > This project targeting to develop a gesture interface using media-pipe framework for contributing to industry-academia cooperation.
 
 ## Demo
-![Demo video](./demo.mov)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9EB619RDjz4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen>
+</iframe>
 
 ## Available operations
 
