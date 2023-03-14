@@ -3,7 +3,7 @@
 > This project targeting to develop a gesture interface using media-pipe framework for contributing to industry-academia cooperation.
 
 ## Demo
-[Example Video](./demo.mp4)
+<video src='https://youtu.be/392A08BjkZM'>
 
 ## Available operations
 
